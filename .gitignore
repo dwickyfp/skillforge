@@ -57,3 +57,7 @@ skillforge_data/
 skillforge_benchmark_results/
 *.png
 *.svg
+
+# Dashboard
+dashboard/node_modules/
+dashboard/dist/
