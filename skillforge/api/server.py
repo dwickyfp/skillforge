@@ -640,10 +640,17 @@ class SkillForgeAPIServer:
 
     def __init__(
         self,
-        skillforge: "SkillForge",
+        skillforge: "SkillForge | None" = None,
         host: str = "127.0.0.1",
         port: int = 8742,
+        *,
+        db_path: str | None = None,
     ) -> None:
+        if skillforge is None and db_path is not None:
+            from skillforge.forge import SkillForge as _SkillForge
+            skillforge = _SkillForge(db_path=db_path)
+        if skillforge is None:
+            raise ValueError("Either skillforge or db_path must be provided")
         self._forge = skillforge
         self._host = host
         self._port = port

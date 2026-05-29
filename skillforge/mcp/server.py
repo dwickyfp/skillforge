@@ -254,7 +254,12 @@ class SkillForgeMCPServer:
     def __init__(
         self,
         skillforge_or_db_path: Any = "~/.skillforge/skillforge.db",
+        *,
+        db_path: Any = None,
     ) -> None:
+        # Accept db_path as a keyword alias
+        if db_path is not None and skillforge_or_db_path == "~/.skillforge/skillforge.db":
+            skillforge_or_db_path = db_path
         self._forge_arg = skillforge_or_db_path
         self._forge: Any = None  # lazy
 

@@ -275,6 +275,9 @@ class RLOptimizer:
 
         return steps
 
+    # Backward-compatible alias
+    optimize_skill = optimize
+
     def batch_optimize(self, threshold: float = 0.5) -> list[TrainingStep]:
         """Optimise all skills whose Q-value is below *threshold*.
 

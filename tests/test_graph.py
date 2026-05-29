@@ -105,15 +105,17 @@ class TestAddDependency:
         with pytest.raises(ValueError, match="self-loop"):
             graph.add_dependency("a", "a")
 
-    def test_missing_source_raises(self, graph: SkillDependencyGraph) -> None:
+    def test_missing_source_auto_added(self, graph: SkillDependencyGraph) -> None:
         graph.add_skill("b")
-        with pytest.raises(ValueError, match="Source"):
-            graph.add_dependency("missing", "b")
+        graph.add_dependency("missing", "b")
+        # "missing" should have been auto-added
+        assert "missing" in graph
 
-    def test_missing_target_raises(self, graph: SkillDependencyGraph) -> None:
+    def test_missing_target_auto_added(self, graph: SkillDependencyGraph) -> None:
         graph.add_skill("a")
-        with pytest.raises(ValueError, match="Target"):
-            graph.add_dependency("a", "missing")
+        graph.add_dependency("a", "missing")
+        # "missing" should have been auto-added
+        assert "missing" in graph
 
     def test_duplicate_updates_weight(self, graph: SkillDependencyGraph) -> None:
         graph.add_skill("a")
@@ -154,12 +156,11 @@ class TestFindPath:
         assert path[0] == "A"
         assert path[-1] == "D"
 
-    def test_path_nonexistent_raises(self, graph: SkillDependencyGraph) -> None:
+    def test_path_nonexistent_auto_added(self, graph: SkillDependencyGraph) -> None:
         graph.add_skill("a")
-        with pytest.raises(ValueError, match="Target"):
-            graph.find_path("a", "missing")
-        with pytest.raises(ValueError, match="Source"):
-            graph.find_path("missing", "a")
+        # Both auto-added, but no edge so no path
+        assert graph.find_path("a", "missing") is None
+        assert "missing" in graph
 
 
 # -----------------------------------------------------------------------

@@ -279,14 +279,13 @@ class SelfDiagnosisEngine:
             }
 
             # Get existing patches or initialize
-            existing_patches = skill.get("patches", [])
+            existing_patches = getattr(skill, "patches", []) or []
             existing_patches.append(patch_record)
 
             updates = {
                 "patches": existing_patches,
                 "last_patched": datetime.now().isoformat(),
                 "patch_count": len(existing_patches),
-                "status": "patched",
             }
 
             success = self._registry.update_skill(skill_id, updates)

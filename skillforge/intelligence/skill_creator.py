@@ -91,8 +91,11 @@ class SkillCreator:
 
     def create_from_trajectory(
         self,
-        task_pattern: str,
-        trajectories: list[Trajectory],
+        task_pattern: str | None = None,
+        trajectories: list[Trajectory] | None = None,
+        *,
+        pattern_name: str | None = None,
+        **_: Any,
     ) -> str:
         """Extract common patterns from successful trajectories and register a skill.
 
@@ -101,6 +104,7 @@ class SkillCreator:
                 category (e.g. ``"summarise document"``).
             trajectories: A list of :class:`Trajectory` instances representing
                 past attempts at tasks matching *task_pattern*.
+            pattern_name: Alias for *task_pattern* (for backward compatibility).
 
         Returns:
             The ``skill_id`` of the newly registered skill.
@@ -109,6 +113,18 @@ class SkillCreator:
             ValueError: If fewer than 2 successful trajectories are provided
                 (not enough data to extract patterns).
         """
+        # Support pattern_name as an alias for task_pattern
+        if task_pattern is None and pattern_name is not None:
+            task_pattern = pattern_name
+        if task_pattern is None:
+            raise ValueError("task_pattern (or pattern_name) is required")
+        if trajectories is None:
+            raise ValueError("trajectories is required")
+        # Auto-convert dicts to Trajectory objects for convenience
+        trajectories = [
+            Trajectory(**t) if isinstance(t, dict) else t
+            for t in trajectories
+        ]
         successful = [t for t in trajectories if t.outcome == "success"]
         failed = [t for t in trajectories if t.outcome == "failure"]
 

@@ -72,14 +72,14 @@ class SkillDependencyGraph:
             weight: Edge weight (0.0 to 1.0+), representing dependency strength.
 
         Raises:
-            ValueError: If either skill_id is not in the graph.
+            ValueError: If from_id == to_id (self-loop).
         """
-        if from_id not in self._nodes:
-            raise ValueError(f"Source skill '{from_id}' not found in graph")
-        if to_id not in self._nodes:
-            raise ValueError(f"Target skill '{to_id}' not found in graph")
         if from_id == to_id:
             raise ValueError("Cannot create self-loop dependency")
+
+        # Auto-add nodes if they don't exist yet
+        self.add_skill(from_id)
+        self.add_skill(to_id)
 
         # Check for duplicate edge
         existing = [edge for edge in self._adjacency[from_id] if edge[0] == to_id]
@@ -107,14 +107,10 @@ class SkillDependencyGraph:
 
         Returns:
             List of skill IDs representing the path, or None if no path exists.
-
-        Raises:
-            ValueError: If either skill_id is not in the graph.
         """
-        if from_id not in self._nodes:
-            raise ValueError(f"Source skill '{from_id}' not found in graph")
-        if to_id not in self._nodes:
-            raise ValueError(f"Target skill '{to_id}' not found in graph")
+        # Auto-add nodes if they don't exist yet
+        self.add_skill(from_id)
+        self.add_skill(to_id)
 
         if from_id == to_id:
             return [from_id]
@@ -175,6 +171,9 @@ class SkillDependencyGraph:
                     impacted.append(dependent)
 
         return impacted
+
+    # Backward-compatible alias
+    get_downstream_impact = downstream_impact
 
     def upstream_impact(self, skill_id: str) -> list[str]:
         """

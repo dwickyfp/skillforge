@@ -162,6 +162,9 @@ class ConflictDetector:
 
         return persisted
 
+    # Backward-compatible alias
+    detect_overlaps = detect_conflicts
+
     def resolve_conflict(
         self,
         conflict_id: str,

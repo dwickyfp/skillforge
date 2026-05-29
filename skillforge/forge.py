@@ -164,6 +164,11 @@ class SkillForge:
         )
         self._tracker.record_outcome(outcome)
 
+        # Auto-update Q-value via TD learning
+        self._tracker.td_lambda_update(
+            skill_id, reward=1.0 if success else 0.0
+        )
+
         # Keep registry-level counters in sync
         stats = self._tracker.get_stats(skill_id)
         self._registry.update_skill(
@@ -224,7 +229,7 @@ class SkillForge:
     def get_skill_stats(
         self,
         skill_id: str | None = None,
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    ) -> dict[str, Any] | None | list[dict[str, Any]]:
         """Return performance statistics for one or all skills.
 
         Parameters
@@ -247,30 +252,38 @@ class SkillForge:
             return self._build_stats(skill_id)
 
         skills = self._registry.list_skills(limit=10_000)
-        return [self._build_stats(s.id, skill=s) for s in skills]
+        results = []
+        for s in skills:
+            stats = self._build_stats(s.id, skill=s)
+            if stats is not None:
+                results.append(stats)
+        return results
 
     def _build_stats(
         self,
         skill_id: str,
         skill: Skill | None = None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | None:
         """Merge tracker stats with registry metadata for one skill."""
         tracker_stats = self._tracker.get_stats(skill_id)
 
         if skill is None:
             skill = self._registry.get_skill(skill_id, tier=1)
 
+        if skill is None:
+            return None
+
         registry_info: dict[str, Any] = {}
-        if skill is not None:
-            registry_info = {
-                "id": skill.id,
-                "name": skill.name,
-                "version": skill.version,
-                "lifecycle": skill.lifecycle.value,
-                "tags": skill.tags,
-                "created_at": skill.created_at.isoformat(),
-                "updated_at": skill.updated_at.isoformat(),
-            }
+        registry_info = {
+            "id": skill.id,
+            "name": skill.name,
+            "version": skill.version,
+            "lifecycle": skill.lifecycle.value,
+            "tags": skill.tags,
+            "usage_count": skill.usage_count,
+            "created_at": skill.created_at.isoformat(),
+            "updated_at": skill.updated_at.isoformat(),
+        }
 
         return {**registry_info, **tracker_stats}
 
@@ -281,7 +294,8 @@ class SkillForge:
     def register_skill(
         self,
         name: str,
-        tier1_metadata: str,
+        display_name: str = "",
+        tier1_metadata: str = "",
         tier2_core: str = "",
         tier3_resources: list[str] | None = None,
         tags: list[str] | None = None,
@@ -293,6 +307,10 @@ class SkillForge:
         ----------
         name : str
             Human-readable skill name.
+        display_name : str
+            Optional human-readable display name.  When provided it is
+            used as the skill's ``name`` in the registry (the *name*
+            argument is then used as the ID if no *skill_id* is given).
         tier1_metadata : str
             Short summary (~30 tokens) used for routing.
         tier2_core : str
@@ -310,15 +328,21 @@ class SkillForge:
             The newly registered skill.
         """
         self._ensure_open()
+        # Resolve naming: if display_name is given, use it as the
+        # human-readable name and treat the first positional as the ID.
+        actual_name = display_name if display_name else name
+        actual_id = skill_id
+        if display_name and not skill_id:
+            actual_id = name
         skill = self._registry.register_skill(
-            name=name,
+            name=actual_name,
             tier1_metadata=tier1_metadata,
             tier2_core=tier2_core,
             tier3_resources=tier3_resources,
             tags=tags,
-            skill_id=skill_id,
+            skill_id=actual_id,
         )
-        self._graph.add_skill(skill.id, metadata={"name": name})
+        self._graph.add_skill(skill.id, metadata={"name": actual_name})
         logger.info("Registered skill '%s' (%s)", skill.name, skill.id)
         return skill
 

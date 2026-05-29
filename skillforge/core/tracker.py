@@ -227,6 +227,60 @@ class QValueTracker:
         self._conn.commit()
         return new_q
 
+    # ------------------------------------------------------------------
+    # Failure retrieval
+    # ------------------------------------------------------------------
+
+    def get_failures(self, skill_id: str, limit: int = 10) -> list[dict[str, Any]]:
+        """Retrieve recent failed outcomes for *skill_id*.
+
+        Parameters
+        ----------
+        skill_id : str
+            Skill to query.
+        limit : int
+            Maximum number of failures to return (default 10).
+
+        Returns
+        -------
+        list[dict[str, Any]]
+            List of failure dicts with keys: skill_id, success, latency_ms,
+            tokens_used, user_feedback, recorded_at.
+        """
+        rows = self._conn.execute(
+            "SELECT skill_id, success, latency_ms, tokens_used, "
+            "user_feedback, recorded_at "
+            "FROM outcomes WHERE skill_id = ? AND success = 0 "
+            "ORDER BY id DESC LIMIT ?",
+            (skill_id, limit),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    def get_usage_count(self, skill_id: str) -> int:
+        """Return total number of recorded outcomes for *skill_id*."""
+        row = self._conn.execute(
+            "SELECT success_count, failure_count FROM q_values WHERE skill_id = ?",
+            (skill_id,),
+        ).fetchone()
+        if row is None:
+            return 0
+        return row["success_count"] + row["failure_count"]
+
+    def get_last_used(self, skill_id: str):
+        """Return the most recent outcome datetime for *skill_id*, or None."""
+        row = self._conn.execute(
+            "SELECT recorded_at FROM outcomes WHERE skill_id = ? "
+            "ORDER BY id DESC LIMIT 1",
+            (skill_id,),
+        ).fetchone()
+        if row is None:
+            return None
+        ts_str = row["recorded_at"]
+        try:
+            return datetime.fromisoformat(ts_str)
+        except (ValueError, TypeError):
+            return None
+
     def close(self) -> None:
         """Close the database connection."""
         self._conn.close()

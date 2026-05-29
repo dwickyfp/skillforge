@@ -156,15 +156,15 @@ class HealthMonitor:
         )
 
     def check_all(self) -> list[SkillHealth]:
-        """Run health checks on every active skill.
+        """Run health checks on every registered skill (all lifecycle states).
 
         Returns:
             A list of :class:`SkillHealth` reports sorted by health score
             (worst first).
         """
-        active_skills = self._registry.list_skills(lifecycle=SkillLifecycle.ACTIVE)
+        all_skills = self._registry.list_skills()
         reports: list[SkillHealth] = []
-        for skill in active_skills:
+        for skill in all_skills:
             try:
                 reports.append(self.check_health(skill.id))
             except ValueError:

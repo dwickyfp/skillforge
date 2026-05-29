@@ -148,6 +148,8 @@ class SelfDiagnosisEngine(Protocol):
         ...
 
 
+from skillforge.core.registry import SkillLifecycle
+
 class EvolutionLoop:
     """
     Orchestrates the continuous evolution and improvement of skills.
@@ -506,7 +508,7 @@ class EvolutionLoop:
                     continue
 
                 # Skip already deprecated skills
-                if skill.get("status") == "deprecated":
+                if getattr(skill, 'lifecycle', None) and skill.lifecycle.value == "deprecated":
                     continue
 
                 # Check Q-value
@@ -543,7 +545,7 @@ class EvolutionLoop:
                 success = self._registry.update_skill(
                     skill_id,
                     {
-                        "status": "deprecated",
+                        "lifecycle": "deprecated",
                         "deprecated_at": datetime.now().isoformat(),
                         "deprecation_reason": "dead_skill",
                         "final_q_value": q_value,
