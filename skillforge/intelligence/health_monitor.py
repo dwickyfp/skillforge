@@ -249,21 +249,29 @@ class HealthMonitor:
         # Success rate component.
         sr_component = max(0.0, min(1.0, success_rate))
 
-        # Recency component: exponential decay with half-life of 14 days.
-        # score = exp(-ln(2) * days / 14)
-        if recency_days == float("inf"):
-            recency_component = 0.0
+        # When a skill has no recorded outcomes, use neutral defaults
+        # for recency and usage to avoid unfairly penalising new or
+        # untested skills (which would otherwise score ≤ 0.35 and
+        # land in the CRITICAL bucket regardless of Q / success rate).
+        if usage_count == 0 and recency_days == float("inf"):
+            recency_component = 0.5
+            usage_component = 0.5
         else:
-            import math
-            recency_component = math.exp(-0.6931 * recency_days / 14.0)
+            # Recency component: exponential decay with half-life of 14 days.
+            # score = exp(-ln(2) * days / 14)
+            if recency_days == float("inf"):
+                recency_component = 0.0
+            else:
+                import math
+                recency_component = math.exp(-0.6931 * recency_days / 14.0)
 
-        # Usage frequency: log-scaled, saturating around 100 uses.
-        # score = min(1.0, log(1 + count) / log(101))
-        if usage_count <= 0:
-            usage_component = 0.0
-        else:
-            import math
-            usage_component = min(1.0, math.log(1 + usage_count) / math.log(101))
+            # Usage frequency: log-scaled, saturating around 100 uses.
+            # score = min(1.0, log(1 + count) / log(101))
+            if usage_count <= 0:
+                usage_component = 0.0
+            else:
+                import math
+                usage_component = min(1.0, math.log(1 + usage_count) / math.log(101))
 
         health = (
             0.35 * q_component

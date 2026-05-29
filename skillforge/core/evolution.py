@@ -217,7 +217,8 @@ class EvolutionLoop:
         report = EvolutionReport(cycle_start=datetime.now())
 
         try:
-            skill_ids = self._registry.list_skills()
+            raw_skills = self._registry.list_skills()
+            skill_ids = [s.id if hasattr(s, 'id') else s for s in raw_skills]
         except Exception as e:
             logger.error("Failed to list skills: %s", str(e))
             report.cycle_end = datetime.now()
@@ -492,7 +493,8 @@ class EvolutionLoop:
         cutoff_date = datetime.now() - timedelta(days=max_age_days)
 
         try:
-            skill_ids = self._registry.list_skills()
+            raw_skills = self._registry.list_skills()
+            skill_ids = [s.id if hasattr(s, 'id') else s for s in raw_skills]
         except Exception as e:
             logger.error("Failed to list skills for pruning: %s", str(e))
             return pruned

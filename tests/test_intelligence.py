@@ -366,17 +366,22 @@ class TestHealthMonitor:
     def test_skill_with_no_usage_has_low_health(
         self, registry: SkillRegistry, tracker: QValueTracker, graph: SkillDependencyGraph
     ) -> None:
-        """A skill with no usage data should have low health (CRITICAL)."""
+        """A skill with no usage data should have moderate health (WARNING).
+
+        Unused skills get neutral defaults (0.5) for recency and usage
+        components, so the score reflects Q-value and success rate only:
+        0.35*0.5 + 0.30*0.5 + 0.20*0.5 + 0.15*0.5 = 0.5 → WARNING.
+        """
         registry.register_skill(
             name="unused", tier1_metadata="unused", skill_id="unused1"
         )
 
         monitor = HealthMonitor(registry, tracker, graph)
         report = monitor.check_health("unused1")
-        # With no outcomes: q=0.5, sr=0.5, recency=inf→0, usage=0→0
-        # Health: 0.35*0.5 + 0.30*0.5 = 0.325 → CRITICAL
-        assert report.status == HealthStatus.CRITICAL
-        assert report.health_score < 0.4
+        # With no outcomes: q=0.5, sr=0.5, recency→0.5 (neutral), usage→0.5 (neutral)
+        # Health: 0.35*0.5 + 0.30*0.5 + 0.20*0.5 + 0.15*0.5 = 0.5 → WARNING
+        assert report.status == HealthStatus.WARNING
+        assert report.health_score == pytest.approx(0.5)
 
 
 # =======================================================================

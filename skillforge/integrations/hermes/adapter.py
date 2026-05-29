@@ -164,7 +164,14 @@ class HermesSkillForgeAdapter:
         skillforge: SkillRegistry,
         hermes_skills_dir: str | Path = "~/.hermes/skills",
     ) -> None:
-        self._registry = skillforge
+        # Accept either a SkillForge instance (which wraps SkillRegistry
+        # in ._registry) or a SkillRegistry directly.
+        if hasattr(skillforge, '_registry') and not isinstance(
+            skillforge, SkillRegistry
+        ):
+            self._registry = skillforge._registry
+        else:
+            self._registry = skillforge
         self._skills_dir = Path(hermes_skills_dir).expanduser().resolve()
 
     # ------------------------------------------------------------------
