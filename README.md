@@ -581,6 +581,103 @@ pytest tests/test_registry.py -v
 
 ---
 
+## Research References
+
+SkillForge is built on a comprehensive survey of 2026's most important research in agent skill systems. Below are the papers that directly inspired our architecture:
+
+### Self-Evolution & Skill Learning
+
+| Paper | Key Finding | SkillForge Usage |
+|-------|------------|------------------|
+| [Memento-Skills](https://arxiv.org/abs/2603.18743) | Self-evolving skill library: +13.7pp GAIA, +20.8pp HLE | EvolutionLoop, SkillCreator |
+| [Skill-Pro](https://arxiv.org/abs/2602.01869) | Non-parametric PPO for skill evolution | Q-value update mechanism |
+| [AutoSkill](https://arxiv.org/abs/2603.01145) | Version-controlled skill lifecycle | SkillRegistry lifecycle management |
+| [AgentFactory](https://arxiv.org/abs/2603.18000) | Skills as executable Python subagent code | SkillTransferEngine |
+| [MUSE-Autoskill](https://arxiv.org/abs/2605.27366) | 5-stage lifecycle with per-skill memory | Skill lifecycle stages |
+| [XSkill](https://arxiv.org/abs/2603.12056) | Dual-stream: skills (task-level) + experiences (action-level) | Tier architecture (L1/L2/L3) |
+| [MemSkill](https://github.com/ViktorAxelsen/MemSkill) | Memory operations as learnable meta-skills | SelfDiagnosisEngine |
+| [SkillFlow](https://skillflow.dev) | Opus 4.6 improves from 62.65% to 71.08% (+8.43pp) | Benchmark targets |
+
+### Learning to Self-Evolve
+
+| Paper | Key Finding | SkillForge Usage |
+|-------|------------|------------------|
+| [LSE — Learning to Self-Evolve](https://openreview.net/pdf?id=zedEdPhmsA) | 4B model beats GPT-5 via learned self-evolution | Core philosophy |
+| [Evolving-RL](https://arxiv.org/abs/2605.10663) | 98.7% improvement on ALFWorld unseen tasks | RLOptimizer |
+| [AEL — Agent Evolving Learning](https://arxiv.org/abs/2604.21725) | "Less is more" — self-diagnosis > more mechanisms (Sharpe 2.13) | SelfDiagnosisEngine (minimal mechanism) |
+| [Native Evolution](https://arxiv.org/abs/2604.18131) | 14B model outperforms unassisted Gemini-2.5-Flash | Evolution philosophy |
+| [AutoAgent](https://arxiv.org/abs/2603.09716) | Evolving cognition + elastic memory, closed-loop | Architecture design |
+
+### Context Efficiency
+
+| Paper | Key Finding | SkillForge Usage |
+|-------|------------|------------------|
+| [Anthropic Progressive Disclosure](https://www.anthropic.com/engineering/code-execution-with-mcp) | 98.7% token reduction (150K → 2K) | ProgressiveLoader 3-tier |
+| [SKILLREDUCER](https://arxiv.org/abs/2603.29919) | Compression *improves* quality (48% desc + 39% body) | SkillOptimizer |
+| [GenericAgent](https://arxiv.org/abs/2604.17091) | Context density maximization, 4-tier memory | Architecture design |
+| [Cloudflare Code Mode](https://nevo.systems) | 99.9% token reduction (1.17M → 1K) | Token efficiency targets |
+
+### Experience-Based Learning & Tool Memory
+
+| Paper | Key Finding | SkillForge Usage |
+|-------|------------|------------------|
+| [SEARL — Tool Graph Memory](https://github.com/circles-post/SEARL) | 23% higher completion, 68% tool reuse rate | SkillDependencyGraph |
+| [MemQ — Provenance DAG](https://github.com/jwliao-ai/MemQ) | Q-learning on provenance DAG, TD(λ) traces | EffectivenessTracker Q-values |
+| [ERL — Experiential Reflective Learning](https://arxiv.org/abs/2603.24639) | Heuristics > raw trajectories, +7.8% over ReAct | SelfDiagnosisEngine insights |
+| [DeepAgent](https://github.com/RUC-NLPIR/DeepAgent) | Autonomous memory folding, brain-inspired | Architecture design |
+
+### Evaluation & Benchmarking
+
+| Paper | Key Finding | SkillForge Usage |
+|-------|------------|------------------|
+| [SEA-Eval](https://arxiv.org/abs/2605.04848) | SR + T convergence detects genuine vs pseudo-evolution | BenchmarkRunner evolution metrics |
+| [SWE-Bench](https://swe-bench.github.io/) | Standard for coding task evaluation | Benchmark task suite |
+| [GAIA Benchmark](https://huggingface.co/gaia-benchmark) | General AI assistant benchmark | Benchmark correctness metric |
+
+### Bibtex
+
+For academic citation, here are the key papers in BibTeX format:
+
+```bibtex
+@article{memento2026skills,
+  title={Memento-Skills: Self-Evolving Skill Library},
+  journal={arXiv preprint arXiv:2603.18743},
+  year={2026}
+}
+
+@article{lse2026,
+  title={Learning to Self-Evolve},
+  journal={OpenReview},
+  year={2026}
+}
+
+@article{ael2026,
+  title={Agent Evolving Learning: Less is More},
+  journal={arXiv preprint arXiv:2604.21725},
+  year={2026}
+}
+
+@article{searl2026,
+  title={SEARL: Self-Evolving Autonomous Agent with Tool Graph Memory},
+  journal={arXiv preprint arXiv:2604.07791},
+  year={2026}
+}
+
+@article{skillreducer2026,
+  title={SKILLREDUCER: Compress to Improve},
+  journal={arXiv preprint arXiv:2603.29919},
+  year={2026}
+}
+
+@article{memq2026,
+  title={MemQ: Provenance DAG for Agent Memory},
+  journal={arXiv preprint arXiv:2605.08374},
+  year={2026}
+}
+```
+
+---
+
 ## License
 
 This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
