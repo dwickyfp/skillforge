@@ -1,4 +1,4 @@
-"""SkillForge Advanced — RL optimization, multi-agent, prediction, transfer, and elastic memory."""
+"""SkillForge Advanced — RL optimization, multi-agent, prediction, transfer, elastic memory, and A/B testing."""
 
 from skillforge.advanced.rl_optimizer import (
     RLOptimizer,
@@ -18,6 +18,17 @@ from skillforge.advanced.skill_generator import (
     GenerationRequest,
 )
 from skillforge.advanced.elastic_memory import ElasticMemory, MemoryEntry
+from skillforge.advanced.ab_testing import (
+    ABTestRunner,
+    ExperimentConfig,
+    ExperimentResult,
+    ExperimentStatus,
+    Variant,
+    Outcome,
+    VariantStats,
+    MetricType,
+    AssignmentStrategy,
+)
 
 __all__ = [
     "RLOptimizer",
@@ -39,4 +50,13 @@ __all__ = [
     "GenerationRequest",
     "ElasticMemory",
     "MemoryEntry",
+    "ABTestRunner",
+    "ExperimentConfig",
+    "ExperimentResult",
+    "ExperimentStatus",
+    "Variant",
+    "Outcome",
+    "VariantStats",
+    "MetricType",
+    "AssignmentStrategy",
 ]
