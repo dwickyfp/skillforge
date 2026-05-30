@@ -29,7 +29,7 @@ Based on converging research: Memento-Skills, AEL, SKILLREDUCER,
 SEA-Eval, MemQ, SEARL.
 """
 
-__version__ = "0.4.0"
+__version__ = "1.0.0"
 __author__ = "Dwicky Feriansyah Putra"
 
 from skillforge.forge import SkillForge
