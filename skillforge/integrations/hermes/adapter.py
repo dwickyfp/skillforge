@@ -379,7 +379,7 @@ class HermesSkillForgeAdapter:
             skill_id=skill_id,
         )
         # Set to ACTIVE since these are curated skills
-        self._registry.update_skill(skill.id, {"lifecycle": SkillLifecycle.ACTIVE})
+        self._registry.update_skill(skill.id, {"lifecycle": SkillLifecycle.ACTIVE.value})
         skill = self._registry.get_skill(skill.id, tier=3)
         assert skill is not None
         logger.debug("Registered new Hermes skill: %s", name)

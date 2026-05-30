@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  skillforge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: skillforge
+    ports:
+      # Port 80: Dashboard (nginx — frontend + API proxy)
+      - "8080:80"
+      # Port 8742: Raw Python API (untuk Hermes host plugin direct access)
+      - "8742:8742"
+    volumes:
+      # Persist SQLite database
+      - skillforge_data:/app/data
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8742/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  skillforge_data:
+    driver: local

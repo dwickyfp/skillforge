@@ -5,6 +5,8 @@ Provides an in-memory directed graph using adjacency lists for managing
 skill dependencies, impact analysis, Q-value propagation, and topological ordering.
 """
 
+from __future__ import annotations
+
 import json
 from collections import deque
 from dataclasses import dataclass, field
