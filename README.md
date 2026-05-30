@@ -1,9 +1,9 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License">
-  <img src="https://img.shields.io/badge/CI-passing-brightgreen.svg" alt="CI Passing">
-  <img src="https://img.shields.io/badge/SQLite-WAL-orange?logo=sqlite&logoColor=white" alt="SQLite WAL">
-  <img src="https://img.shields.io/badge/status-alpha-yellow.svg" alt="Alpha">
+  <img src="https://img.shields.io/badge/Tests-373%20passing-brightgreen.svg" alt="373 Tests">
+  <img src="https://img.shields.io/badge/Deps-zero-orange.svg" alt="Zero Dependencies">
+  <img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="v1.0.0">
 </p>
 
 <h1 align="center">⚒️ SkillForge</h1>
@@ -22,11 +22,16 @@
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Architecture](#architecture)
-- [Components](#components)
+- [Core Components](#core-components)
+- [Intelligence Layer](#intelligence-layer)
+- [Advanced Intelligence](#advanced-intelligence)
+- [Platform Layer](#platform-layer)
+- [Production Layer](#production-layer)
+- [Web Dashboard](#web-dashboard)
 - [Benchmarking](#benchmarking)
 - [Hermes Integration](#hermes-integration)
+- [Project Structure](#project-structure)
 - [Research Foundations](#research-foundations)
-- [Roadmap](#roadmap)
 - [License](#license)
 
 ---
@@ -45,12 +50,25 @@ Most agents ship with a fixed set of skills. When a skill fails, nobody notices.
 
 Built on research from Memento-Skills, AEL, SKILLREDUCER, SEA-Eval, and MemQ, SkillForge is designed as a drop-in skill intelligence layer for any agent framework.
 
+### Key Stats
+
+| Metric | Value |
+|--------|-------|
+| **Components** | 35+ |
+| **Python files** | 58 |
+| **Lines of code** | 22,593 |
+| **Tests** | 373 passing |
+| **Test time** | 1.30s |
+| **External deps** | 0 (stdlib-only) |
+
 ---
 
 ## Features
 
+### Core (6 components)
+
 | Component | Description |
-|---|---|
+|-----------|-------------|
 | **Skill Registry** | SQLite-backed registry with 3-tier progressive loading (metadata → core prompt → full resources). Full CRUD, versioning, lifecycle management (draft → active → deprecated → archived). |
 | **Effectiveness Tracker** | Tracks execution outcomes (success, latency, tokens, feedback). Maintains rolling Q-values via TD(λ) temporal-difference learning — skills that consistently succeed get higher priority. |
 | **Self-Diagnosis Engine** | Analyzes failure patterns across recent outcomes. Supports rule-based heuristics out of the box, with optional LLM-assisted analysis for deeper insights. Generates patch suggestions with confidence scores. |
@@ -58,21 +76,90 @@ Built on research from Memento-Skills, AEL, SKILLREDUCER, SEA-Eval, and MemQ, Sk
 | **Progressive Loader** | Loads skills at the right detail level for the task. Tier 1 = metadata (~30 tokens), Tier 2 = core prompt, Tier 3 = full resources. Supports multiple routing strategies (Q-value, success rate, relevance, usage count). |
 | **Evolution Loop** | Continuous lifecycle management. Evaluates skill health (healthy/warning/critical), triggers diagnosis and patching for underperformers, and prunes dead skills that are low-Q, low-usage, and stale. |
 
+### Intelligence (5 components)
+
+| Component | Description |
+|-----------|-------------|
+| **Conflict Detector** | Detects skill overlaps, contradictions, and dependency cycles. Uses Jaccard similarity for overlap detection (threshold > 0.6). |
+| **Health Monitor** | 4-weight health scoring: Q-value (35%), success rate (30%), recency decay (20%, half-life 14 days), usage frequency (15%, log-scaled saturation). |
+| **Skill Creator** | Auto-creates skills from successful execution trajectories. Pattern frequency threshold (>60%), optional LLM-assisted extraction. |
+| **Skill Analyzer** | Clustering, pattern detection, and recommendations. Identifies underperforming skill clusters and suggests improvements. |
+| **Skill Optimizer** | Compression (deduplicate, reorder), splitting (decompose monolithic skills), and merging (consolidate similar skills). |
+
+### Advanced Intelligence (6 components)
+
+| Component | Description |
+|-----------|-------------|
+| **Elastic Memory** | Adaptive memory store with importance tracking. Consolidation via Jaccard similarity > 0.7. Auto-compact with composite retention score (importance 0.45, recency 0.30, access frequency 0.25). |
+| **Alert Manager** | Threshold, trend, and anomaly detection alerts. Alert lifecycle (active → acknowledged → resolved). Cooldown support, rule targeting, callback registration for webhook/email/Slack notifications. |
+| **Skill Generator** | Zero-shot skill generation from natural language descriptions. Template-driven (no LLM required), TF-IDF-lite keyword extraction, domain-aware tag inference. |
+| **Enhanced RL Optimizer** | Contextual bandits (epsilon-greedy with decay), replay buffer (fixed-capacity deque), reward model (linear SGD), curriculum scheduler (difficulty-based ordering). |
+| **Performance Predictor** | OLS linear regression for performance trend prediction. Predicts skill improvement/decline from last 20 outcomes. Population variance for consistency measurement. |
+| **Skill Transfer Engine** | Cross-agent skill export/import. Formats skills for Hermes, OpenClaw, LangChain, CrewAI. Includes metadata, core content, and dependencies. |
+
+### Platform (4 components)
+
+| Component | Description |
+|-----------|-------------|
+| **REST API Server** | 13 endpoints on port 8742 (stdlib http.server). CRUD for skills, outcomes, evolution, health, graph, metrics. Zero external dependencies. |
+| **MCP Server** | 8 tools via stdin/stdout JSON-RPC. Compatible with Claude Desktop, Cursor, and other MCP clients. |
+| **CLI Tool** | 8 commands: serve, skills list/health/search, evolve, dashboard, import, export. |
+| **Web Dashboard** | React 18 + Vite + Tailwind CSS 4 + shadcn/ui. 5 pages (Dashboard, Skills, Evolution, Graph, Settings). Recharts visualization. Dark theme. Mock data fallback. |
+
+### Marketplace & Observability (4 components)
+
+| Component | Description |
+|-----------|-------------|
+| **Skill Marketplace** | Publish, install, rate, and deprecate skills. SQLite-backed catalogue with search, filtering, and install tracking. |
+| **Observability — Tracing** | OpenTelemetry-inspired span-based distributed tracing. SQLite persistence, nested spans, parent-child relationships. |
+| **Observability — Metrics** | Counters, gauges, timings with summarization (min/max/mean/p50/p95/p99), histograms, label-based filtering. |
+| **Observability — Logging** | JSON-structured log entries with 5 severity levels, trace/span correlation, component/skill filtering, full-text search. |
+
+### Async & Versioning (4 components)
+
+| Component | Description |
+|-----------|-------------|
+| **Async Skill Registry** | Async wrapper via `asyncio.to_thread()` for all registry CRUD operations. |
+| **Async Q-Value Tracker** | Async outcome recording, Q-value queries, and TD(λ) updates. |
+| **Async Progressive Loader** | Async skill loading and sticky skill retrieval. |
+| **Version Manager** | Semantic versioning (semver 2.0.0). Full version history with snapshots, rollback to any version, content diff, auto-generated changelogs. |
+
+### Scale (3 components)
+
+| Component | Description |
+|-----------|-------------|
+| **A/B Testing** | Full experiment lifecycle. 4 assignment strategies (RANDOM, ROUND_ROBIN, WEIGHTED_RANDOM, HASH_BASED). Two-proportion z-test (2 variants) + chi-squared (3+ variants). Normal CDF via Abramowitz & Stegun (~1.5e-7 accuracy). |
+| **DB Abstraction** | `DatabaseBackend` Protocol interface. `SQLiteBackend` (WAL mode, threading lock) + `MemoryBackend` (ephemeral for tests). `DatabaseConnection` context manager with auto-commit/rollback. |
+| **Integration Adapters** | `GitHubAdapter` (REST API with SHA tracking), `SlackAdapter` (incoming webhooks), `WebhookAdapter` (HTTP POST + HMAC-SHA256), `FileAdapter` (JSON/markdown export). `AdapterRegistry` for dispatch and health checks. |
+
+### Production (6 components)
+
+| Component | Description |
+|-----------|-------------|
+| **Circuit Breaker** | CLOSED → OPEN → HALF_OPEN state machine. Configurable failure threshold, recovery timeout, half-open probes. Thread-safe via `threading.Lock`. |
+| **Retry Policy** | Exponential backoff with jitter. Configurable max attempts, base delay, max delay, backoff factor, retriable exceptions. |
+| **Bulkhead** | Concurrency limiter with semaphore. Configurable max concurrent executions and max wait time. |
+| **Graceful Degradation** | Cascading fallback chains. Primary function + ordered fallback list. `FallbackChainExhaustedError` on total failure. |
+| **Resilient Executor** | Composable wrapper: Bulkhead → Circuit Breaker → Retry → Callable. Single API for all resilience layers. |
+| **Caching** | `TTLCache` (time-to-live with lazy expiry + max_size eviction), `LRUCache` (Least Recently Used), `CachedStore` (composable over data source), `@cached` decorator. `CacheStats` for hit/miss tracking. |
+
 ---
 
 ## Installation
 
 ```bash
-# From Git (recommended during alpha)
-pip install git+https://github.com/nousresearch/skillforge.git
-
-# Or clone and install in development mode
-git clone https://github.com/nousresearch/skillforge.git
+# From Git
+git clone https://github.com/dwickyfp/skillforge.git
 cd skillforge
-pip install -e ".[dev]"
+pip install -e .
+
+# Or install directly
+pip install git+https://github.com/dwickyfp/skillforge.git
 ```
 
 **Requirements:** Python 3.10+, SQLite 3.35+ (ships with Python)
+
+**Zero external dependencies** — SkillForge uses only Python stdlib.
 
 ---
 
@@ -131,67 +218,92 @@ with SkillForge() as forge:
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        SkillForge Orchestrator                       │
-│                            (forge.py)                                │
-├─────────────┬──────────────┬────────────────┬───────────────────────┤
-│             │              │                │                       │
-│  ┌──────────▼──────────┐  │  ┌─────────────▼────────────┐          │
-│  │   Skill Registry    │  │  │  Effectiveness Tracker   │          │
-│  │   ─────────────     │  │  │  ────────────────────    │          │
-│  │   • 3-tier loading  │  │  │  • Outcome recording    │          │
-│  │   • CRUD + version  │  │  │  • Q-values (TD(λ))     │          │
-│  │   • Lifecycle mgmt  │  │  │  • Rolling statistics   │          │
-│  │   • SQLite backend  │  │  │  • SQLite backend       │          │
-│  └──────────┬──────────┘  │  └─────────────┬────────────┘          │
-│             │              │                │                       │
-│  ┌──────────▼──────────────▼────────────────▼──────────────┐       │
-│  │              Progressive Loader                          │       │
-│  │              ──────────────────                          │       │
-│  │   • Tier-by-tier retrieval                              │       │
-│  │   • Q-value routing / relevance / success rate          │       │
-│  │   • Sticky skills (recently used get priority)          │       │
-│  └──────────────────────────┬──────────────────────────────┘       │
-│                              │                                      │
-│  ┌───────────────────────────▼──────────────────────────────┐      │
-│  │                  Evolution Loop                           │      │
-│  │                  ──────────────                           │      │
-│  │   • Health assessment (healthy/warning/critical)          │      │
-│  │   • Triggers diagnosis → patch → version bump             │      │
-│  │   • Prunes dead skills (low-Q, low-usage, stale)         │      │
-│  └───────┬────────────────────────────────────┬─────────────┘      │
-│          │                                    │                     │
-│  ┌───────▼──────────┐           ┌─────────────▼────────────┐       │
-│  │  Self-Diagnosis  │           │  Skill Dependency Graph  │       │
-│  │  ─────────────── │           │  ────────────────────── │       │
-│  │  • Failure       │           │  • DAG of dependencies  │       │
-│  │    pattern       │           │  • Topological sort     │       │
-│  │    analysis      │           │  • Impact analysis      │       │
-│  │  • Rule-based +  │           │  • Q-value propagation  │       │
-│  │    LLM insights  │           │  • In-memory graph      │       │
-│  │  • Auto-patching │           │                         │       │
-│  └──────────────────┘           └──────────────────────────┘       │
-│                                                                     │
-├─────────────────────────────────────────────────────────────────────┤
-│  Integrations                                                       │
-│  ┌──────────────────────────────────────────┐                      │
-│  │  Hermes SkillForge Adapter               │                      │
-│  │  • Import SKILL.md → SkillForge          │                      │
-│  │  • Export SkillForge → SKILL.md          │                      │
-│  │  • Bidirectional sync                    │                      │
-│  └──────────────────────────────────────────┘                      │
-│  ┌──────────────────────────────────────────┐                      │
-│  │  Benchmark Runner                        │                      │
-│  │  • A/B comparison (vanilla vs +SF)       │                      │
-│  │  • Correctness, cost, latency metrics    │                      │
-│  │  • Statistical significance testing      │                      │
-│  └──────────────────────────────────────────┘                      │
-└─────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────┐
+│                         SkillForge Orchestrator                           │
+│                             (forge.py)                                    │
+├───────────────┬───────────────┬──────────────────┬────────────────────────┤
+│               │               │                  │                        │
+│  ┌────────────▼──────────┐    │  ┌───────────────▼────────────┐          │
+│  │   Skill Registry      │    │  │  Effectiveness Tracker     │          │
+│  │   ─────────────────   │    │  │  ──────────────────────    │          │
+│  │   • 3-tier loading    │    │  │  • Outcome recording       │          │
+│  │   • CRUD + version    │    │  │  • Q-values (TD(λ))       │          │
+│  │   • Lifecycle mgmt    │    │  │  • Rolling statistics      │          │
+│  │   • SQLite backend    │    │  │  • SQLite backend          │          │
+│  └────────────┬──────────┘    │  └───────────────┬────────────┘          │
+│               │               │                  │                        │
+│  ┌────────────▼───────────────▼──────────────────▼──────────────┐        │
+│  │                  Progressive Loader                           │        │
+│  │                  ──────────────────                           │        │
+│  │   • Tier-by-tier retrieval                                    │        │
+│  │   • Q-value routing / relevance / success rate               │        │
+│  │   • Sticky skills (recently used get priority)               │        │
+│  └──────────────────────────────┬────────────────────────────────┘        │
+│                                  │                                        │
+│  ┌───────────────────────────────▼────────────────────────────────┐      │
+│  │                    Evolution Loop                               │      │
+│  │                    ──────────────                               │      │
+│  │   • Health assessment (healthy/warning/critical)                │      │
+│  │   • Triggers diagnosis → patch → version bump                   │      │
+│  │   • Prunes dead skills (low-Q, low-usage, stale)               │      │
+│  └───────┬────────────────────────────────────────┬───────────────┘      │
+│          │                                        │                       │
+│  ┌───────▼──────────┐              ┌──────────────▼──────────────┐       │
+│  │  Self-Diagnosis  │              │  Skill Dependency Graph     │       │
+│  │  ─────────────── │              │  ──────────────────────    │       │
+│  │  • Failure       │              │  • DAG of dependencies      │       │
+│  │    pattern       │              │  • Topological sort         │       │
+│  │    analysis      │              │  • Impact analysis          │       │
+│  │  • Rule-based +  │              │  • Q-value propagation      │       │
+│  │    LLM insights  │              │  • In-memory graph          │       │
+│  │  • Auto-patching │              │                             │       │
+│  └──────────────────┘              └─────────────────────────────┘       │
+│                                                                           │
+├───────────────────────────────────────────────────────────────────────────┤
+│  Intelligence Layer                                                       │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │  Conflict Detector  │  Health Monitor  │  Skill Creator            │  │
+│  │  Skill Analyzer     │  Skill Optimizer │  Elastic Memory           │  │
+│  │  Alert Manager      │  Skill Generator │  Enhanced RL Optimizer    │  │
+│  │  Performance Predictor │  Skill Transfer Engine                    │  │
+│  └────────────────────────────────────────────────────────────────────┘  │
+│                                                                           │
+├───────────────────────────────────────────────────────────────────────────┤
+│  Platform Layer                                                           │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │  REST API (port 8742)  │  MCP Server  │  CLI  │  Web Dashboard    │  │
+│  │  Skill Marketplace     │  Observability (Tracing/Metrics/Logging) │  │
+│  │  Async Support         │  Versioning  │  A/B Testing              │  │
+│  └────────────────────────────────────────────────────────────────────┘  │
+│                                                                           │
+├───────────────────────────────────────────────────────────────────────────┤
+│  Production Layer                                                         │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │  Circuit Breaker │ Retry Policy │ Bulkhead │ Graceful Degradation │  │
+│  │  Resilient Executor │ TTL/LRU Caching │ DB Abstraction            │  │
+│  │  Integration Adapters (GitHub/Slack/Webhook/File)                  │  │
+│  └────────────────────────────────────────────────────────────────────┘  │
+│                                                                           │
+├───────────────────────────────────────────────────────────────────────────┤
+│  Integrations                                                             │
+│  ┌──────────────────────────────────────────┐                            │
+│  │  Hermes SkillForge Adapter               │                            │
+│  │  • Import SKILL.md → SkillForge          │                            │
+│  │  • Export SkillForge → SKILL.md          │                            │
+│  │  • Bidirectional sync                    │                            │
+│  └──────────────────────────────────────────┘                            │
+│  ┌──────────────────────────────────────────┐                            │
+│  │  Benchmark Runner                        │                            │
+│  │  • A/B comparison (vanilla vs +SF)       │                            │
+│  │  • Correctness, cost, latency metrics    │                            │
+│  │  • Statistical significance testing      │                            │
+│  └──────────────────────────────────────────┘                            │
+└───────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Components
+## Core Components
 
 ### Skill Registry
 
@@ -375,6 +487,643 @@ report = evolution.run_evolution_loop(thresholds={
 
 ---
 
+## Intelligence Layer
+
+### Elastic Memory
+
+Adaptive memory store with consolidation and auto-compact.
+
+```python
+from skillforge.advanced.elastic_memory import ElasticMemory, MemoryEntry
+
+memory = ElasticMemory(db_path="./memory.db")
+
+# Remember a skill execution
+entry = memory.remember(
+    skill_id="code-reviewer",
+    content="Found critical bug in auth module",
+    importance=0.9,
+    metadata={"severity": "high", "module": "auth"},
+)
+
+# Recall relevant memories
+results = memory.recall("auth bug critical")
+for result in results:
+    print(f"[{result.importance:.2f}] {result.content}")
+
+# Consolidate similar memories (Jaccard > 0.7)
+memory.consolidate()
+
+# Auto-compact (LRU with composite retention score)
+memory.auto_compact(max_memories=1000)
+
+memory.close()
+```
+
+### Alert Manager
+
+Threshold, trend, and anomaly detection alerts.
+
+```python
+from skillforge.intelligence.alert_manager import AlertManager, AlertRule, AlertRuleType
+
+alerts = AlertManager(registry, tracker, health_monitor)
+
+# Add alert rules
+alerts.add_rule(AlertRule(
+    name="critical-skill-degradation",
+    rule_type=AlertRuleType.THRESHOLD,
+    metric="health_score",
+    threshold=0.4,
+    operator="less_than",
+    cooldown_seconds=3600,
+))
+
+# Check alerts (evaluates all rules)
+fired = alerts.check_alerts()
+for alert in fired:
+    print(f"🚨 {alert.severity}: {alert.message}")
+
+# Get active alerts
+active = alerts.get_active_alerts()
+
+# Acknowledge and resolve
+alerts.acknowledge_alert(alert.id)
+alerts.resolve_alert(alert.id, resolution="Fixed by updating prompt")
+```
+
+### Skill Generator
+
+Zero-shot skill generation from natural language.
+
+```python
+from skillforge.advanced.skill_generator import SkillGenerator, GenerationRequest
+
+generator = SkillGenerator(registry)
+
+# Generate a skill from description
+skill = generator.generate(GenerationRequest(
+    description="A skill for reviewing pull requests on GitHub, checking for bugs, style issues, and performance problems",
+    domain="code-review",
+    complexity="medium",
+    include_examples=True,
+))
+
+print(f"Generated: {skill.name}")
+print(f"Tags: {skill.tags}")
+print(f"Confidence: {skill.confidence:.2f}")
+
+# Generate and register in one step
+skill_id = generator.generate_and_register(
+    description="Summarize long documents into bullet points",
+    domain="nlp",
+)
+
+# Batch generation
+skills = generator.generate_batch([
+    GenerationRequest(description="Debug Python code", domain="debugging"),
+    GenerationRequest(description="Write unit tests", domain="testing"),
+])
+```
+
+### Enhanced RL Optimizer
+
+Contextual bandits, replay buffer, reward model, curriculum scheduling.
+
+```python
+from skillforge.advanced.rl_optimizer import RLOptimizer
+
+rl = RLOptimizer(registry, tracker, evolution)
+
+# Contextual bandit: recommend next action
+action = rl.recommend_action("code-reviewer")
+# → "evolve" | "patch" | "prune" | "keep"
+
+# Predict reward for an action
+reward = rl.predict_reward("code-reviewer", action="evolve")
+
+# Curriculum optimization (difficulty-based ordering)
+rl.curriculum_optimize(skill_ids=["skill-1", "skill-2", "skill-3"])
+
+# Batch optimize all underperforming skills
+rl.batch_optimize(threshold=0.5)
+
+# Get diagnostics
+diag = rl.get_diagnostics()
+print(f"Bandit epsilon: {diag['epsilon']:.3f}")
+print(f"Replay buffer size: {diag['buffer_size']}")
+```
+
+### Performance Predictor
+
+OLS linear regression for performance trend prediction.
+
+```python
+from skillforge.advanced.predictor import SkillPredictor
+
+predictor = SkillPredictor(registry, tracker, graph)
+
+# Predict performance trend
+trend = predictor.predict_performance("code-reviewer")
+print(f"Predicted Q in 7 days: {trend.predicted_q:.2f}")
+print(f"Confidence: {trend.confidence:.2f}")
+print(f"Trend: {trend.direction}")  # "improving" | "stable" | "declining"
+
+# Get recommendations for a task
+recommendations = predictor.predict_for_task("review github pr")
+for rec in recommendations:
+    print(f"  {rec.skill_id}: Q={rec.predicted_q:.2f} (σ²={rec.variance:.3f})")
+```
+
+### Skill Transfer Engine
+
+Cross-agent skill export/import.
+
+```python
+from skillforge.advanced.transfer import SkillTransferEngine
+
+transfer = SkillTransferEngine(registry)
+
+# Export to Hermes format
+hermes_path = transfer.export_to_hermes(
+    skill_id="code-reviewer",
+    output_dir="~/.hermes/skills/productivity/",
+)
+
+# Export to OpenClaw format
+openclaw_path = transfer.export_to_openclaw(
+    skill_id="code-reviewer",
+    output_dir="./openclaw-skills/",
+)
+
+# Export to LangChain format
+langchain_path = transfer.export_to_langchain(
+    skill_id="code-reviewer",
+    output_dir="./langchain-skills/",
+)
+
+# Import from another agent
+imported = transfer.import_skill(
+    format="hermes",
+    path="~/.hermes/skills/productivity/code-reviewer/SKILL.md",
+)
+```
+
+---
+
+## Advanced Intelligence
+
+### Conflict Detector
+
+Detects skill overlaps, contradictions, and dependency cycles.
+
+```python
+from skillforge.intelligence.conflict_detector import ConflictDetector
+
+detector = ConflictDetector(registry, tracker)
+
+# Detect overlapping skills (Jaccard similarity > 0.6)
+overlaps = detector.detect_overlaps()
+for overlap in overlaps:
+    print(f"Overlap: {overlap.skill_a} ↔ {overlap.skill_b} ({overlap.similarity:.2f})")
+
+# Detect contradictory skills
+contradictions = detector.detect_contradictions()
+
+# Detect dependency cycles
+cycles = detector.detect_cycles()
+```
+
+### Health Monitor
+
+4-weight health scoring with exponential decay.
+
+```python
+from skillforge.intelligence.health_monitor import HealthMonitor
+
+health = HealthMonitor(registry, tracker, graph)
+
+# Check all skills
+results = health.check_all()
+for result in results:
+    print(f"{result.skill_id}: {result.status} (score={result.score:.2f})")
+
+# Health formula:
+# 0.35 × Q_value
+# + 0.30 × Success_Rate
+# + 0.20 × Recency_Decay (half-life 14 days)
+# + 0.15 × Usage_Frequency (log-scaled, saturates at ~100 uses)
+```
+
+---
+
+## Platform Layer
+
+### REST API Server
+
+```bash
+# Start the API server
+skillforge serve --port 8742
+
+# Endpoints:
+# GET  /api/skills              → List all skills
+# GET  /api/skills/:id          → Skill detail
+# POST /api/skills              → Create skill
+# POST /api/skills/:id/outcomes → Record outcome
+# POST /api/evolution/run       → Trigger evolution
+# GET  /api/health              → Health dashboard
+# GET  /api/metrics             → Aggregated metrics
+# GET  /api/graph               → Dependency graph
+# GET  /api/evolution/history   → Evolution timeline
+```
+
+### Python API Client
+
+```python
+from skillforge.api.client import SkillForgeClient
+
+client = SkillForgeClient(base_url="http://localhost:8742")
+
+# List skills
+skills = client.list_skills()
+
+# Record outcome
+client.record_outcome("skill-id", success=True, latency_ms=300, tokens_used=1000)
+
+# Trigger evolution
+client.run_evolution()
+
+# Get health dashboard
+health = client.get_health()
+```
+
+### CLI Tool
+
+```bash
+# List all skills
+skillforge skills list
+
+# Search skills
+skillforge skills search "code review"
+
+# Check health
+skillforge health
+
+# Run evolution
+skillforge evolve
+
+# Start API server
+skillforge serve --port 8742
+
+# Open dashboard
+skillforge dashboard
+
+# Import from Hermes
+skillforge import --source ~/.hermes/skills
+
+# Export to Hermes
+skillforge export --skill code-reviewer --target ~/.hermes/skills/
+```
+
+### MCP Server
+
+```bash
+# Start MCP server (stdin/stdout JSON-RPC)
+skillforge-mcp
+
+# 8 tools available:
+# - list_skills
+# - get_skill
+# - search_skills
+# - record_outcome
+# - run_evolution
+# - get_health
+# - get_graph
+# - get_metrics
+```
+
+### A/B Testing
+
+```python
+from skillforge.advanced.ab_testing import ABTestRunner, ExperimentConfig, Variant
+
+runner = ABTestRunner(db_path="./ab_tests.db")
+
+# Create experiment
+config = ExperimentConfig(
+    name="prompt-optimization",
+    variants=[
+        Variant(id="control", skill_id="code-reviewer-v1", weight=0.5),
+        Variant(id="treatment", skill_id="code-reviewer-v2", weight=0.5),
+    ],
+    significance_level=0.05,
+    min_sample_size=50,
+)
+
+exp_id = runner.create_experiment(config)
+runner.start_experiment(exp_id)
+
+# Assign users to variants (4 strategies: RANDOM, ROUND_ROBIN, WEIGHTED_RANDOM, HASH_BASED)
+variant = runner.assign_variant(exp_id, user_id="user-123")
+
+# Record outcomes
+runner.record_outcome(exp_id, variant_id="control", success=True, latency_ms=300)
+runner.record_outcome(exp_id, variant_id="treatment", success=True, latency_ms=250)
+
+# Evaluate statistical significance
+result = runner.evaluate(exp_id)
+print(f"Significant: {result.is_significant}")
+print(f"p-value: {result.p_value:.4f}")
+print(f"Winner: {result.winner}")
+```
+
+### Skill Marketplace
+
+```python
+from skillforge.marketplace.registry import MarketplaceRegistry
+from skillforge.marketplace.publisher import SkillPublisher
+from skillforge.marketplace.installer import SkillInstaller
+
+marketplace = MarketplaceRegistry(db_path="./marketplace.db")
+publisher = SkillPublisher(marketplace, registry)
+installer = SkillInstaller(marketplace, registry)
+
+# Publish a skill
+publisher.publish(
+    skill_id="code-reviewer",
+    version="1.2.0",
+    description="Expert code review for Python projects",
+    tags=["code", "review", "python"],
+    visibility="public",
+)
+
+# Search marketplace
+results = marketplace.search("code review", tags=["python"])
+
+# Install a skill
+installed = installer.install(
+    skill_id="code-reviewer",
+    version="1.2.0",
+    target_dir="~/.hermes/skills/productivity/",
+)
+
+# Rate a skill
+marketplace.rate("code-reviewer", rating=5, review="Excellent skill!")
+```
+
+### Observability
+
+```python
+from skillforge.observability.tracer import SkillTracer
+from skillforge.observability.metrics import MetricsCollector
+from skillforge.observability.logger import StructuredLogger
+
+# Tracing
+tracer = SkillTracer(db_path="./traces.db")
+with tracer.start_span("skill-execution", skill_id="code-reviewer") as span:
+    # ... execute skill ...
+    span.set_attribute("tokens_used", 1200)
+    span.set_status("ok")
+
+# Metrics
+metrics = MetricsCollector(db_path="./metrics.db")
+metrics.counter("skill_loads", labels={"skill": "code-reviewer"}).inc()
+metrics.gauge("q_value", labels={"skill": "code-reviewer"}).set(0.85)
+metrics.timing("execution_time", labels={"skill": "code-reviewer"}).observe(340.0)
+
+# Get summary
+summary = metrics.summarize("execution_time")
+print(f"p50: {summary['p50']:.1f}ms, p95: {summary['p95']:.1f}ms")
+
+# Structured logging
+logger = StructuredLogger(db_path="./logs.db")
+logger.info("Skill loaded", component="loader", skill="code-reviewer")
+logger.warning("Low Q-value", component="evolution", skill="old-skill", q_value=0.3)
+```
+
+### Versioning
+
+```python
+from skillforge.versioning.version_manager import VersionManager, SemanticVersion
+
+vm = VersionManager(db_path="./versions.db")
+
+# Save a version snapshot
+vm.save_version("code-reviewer", version="1.2.0", data={
+    "tier1_metadata": "Review code for bugs...",
+    "tier2_core": "You are an expert code reviewer...",
+})
+
+# List version history
+history = vm.list_versions("code-reviewer")
+for v in history:
+    print(f"  v{v.version} — {v.created_at}")
+
+# Diff between versions
+diff = vm.diff("code-reviewer", "1.1.0", "1.2.0")
+print(f"Added: {diff['added']}")
+print(f"Modified: {diff['modified']}")
+print(f"Removed: {diff['removed']}")
+
+# Rollback to a previous version
+vm.rollback("code-reviewer", version="1.1.0")
+```
+
+---
+
+## Production Layer
+
+### Circuit Breaker
+
+```python
+from skillforge.core.resilience import CircuitBreaker, CircuitState
+
+cb = CircuitBreaker(
+    name="llm-api",
+    failure_threshold=5,        # Open after 5 consecutive failures
+    recovery_timeout=30.0,      # Wait 30s before half-open
+    half_open_max=2,            # Allow 2 probe calls
+    excluded_exceptions=(ValueError,),  # Don't count validation errors
+)
+
+# Use the circuit breaker
+try:
+    result = cb.call(lambda: call_llm_api(prompt))
+except CircuitOpenError as e:
+    print(f"Circuit open, retry in {e.remaining_seconds:.1f}s")
+
+# Check state
+stats = cb.get_stats()
+print(f"State: {stats.state}")  # CLOSED / OPEN / HALF_OPEN
+print(f"Failures: {stats.consecutive_failures}")
+```
+
+### Retry Policy
+
+```python
+from skillforge.core.resilience import RetryPolicy
+
+rp = RetryPolicy(
+    max_attempts=3,
+    base_delay=1.0,
+    max_delay=60.0,
+    backoff_factor=2.0,
+    jitter=True,
+    retriable_exceptions=(ConnectionError, TimeoutError),
+)
+
+# Execute with retries
+result = rp.execute(lambda: fetch_remote_data(url))
+```
+
+### Resilient Executor
+
+Composable wrapper combining circuit breaker, retry, and bulkhead.
+
+```python
+from skillforge.core.resilience import ResilientExecutor, CircuitBreaker, RetryPolicy, Bulkhead
+
+executor = ResilientExecutor(
+    name="llm-call",
+    circuit_breaker=CircuitBreaker("llm", failure_threshold=5),
+    retry_policy=RetryPolicy(max_attempts=3, base_delay=1.0),
+    bulkhead=Bulkhead("llm-pool", max_concurrent=10),
+)
+
+# Execute through all resilience layers
+result = executor.execute(lambda: call_llm(prompt))
+
+# Get aggregated stats
+stats = executor.get_stats()
+print(f"Total calls: {stats.total_attempts}")
+print(f"Successes: {stats.total_successes}")
+```
+
+### Caching
+
+```python
+from skillforge.core.cache import TTLCache, LRUCache, CachedStore, cached
+
+# TTL Cache
+cache = TTLCache(ttl_seconds=300, max_size=1024)
+cache.put("skill-stats:code-reviewer", {"q_value": 0.85, "usage": 42})
+stats = cache.get("skill-stats:code-reviewer")
+
+# LRU Cache
+lru = LRUCache(max_size=256)
+lru.put("key", "value")
+
+# CachedStore — wraps a data source with TTL
+store = CachedStore(
+    fetch_fn=lambda key: expensive_query(key),
+    ttl_seconds=60,
+)
+result = store.get("query-key")  # cached after first call
+
+# @cached decorator
+@cached(ttl_seconds=120)
+def get_skill_stats(skill_id: str) -> dict:
+    return forge.get_skill_stats(skill_id)
+
+# Cache stats
+print(f"Hit rate: {cache.stats.hit_rate:.1%}")
+```
+
+### DB Abstraction
+
+```python
+from skillforge.core.db import create_backend, SQLiteBackend, MemoryBackend
+
+# SQLite backend (production)
+db = create_backend("sqlite", path="./skillforge.db")
+
+# Memory backend (testing)
+db = create_backend("memory")
+
+# Use the connection
+with db.connect() as conn:
+    result = conn.execute("SELECT * FROM skills WHERE q_value > ?", (0.7,))
+    for row in result:
+        print(row)
+```
+
+### Integration Adapters
+
+```python
+from skillforge.integrations.adapters import (
+    GitHubAdapter, SlackAdapter, WebhookAdapter, FileAdapter, AdapterRegistry
+)
+
+registry = AdapterRegistry()
+
+# Register adapters
+registry.register("github", GitHubAdapter(
+    repo="user/skills-repo",
+    token="ghp_xxx",
+))
+
+registry.register("slack", SlackAdapter(
+    webhook_url="https://hooks.slack.com/services/xxx",
+))
+
+registry.register("webhook", WebhookAdapter(
+    url="https://api.example.com/skills",
+    secret="hmac-secret",  # HMAC-SHA256 signature
+))
+
+# Dispatch events to all adapters
+registry.dispatch(event_type="skill_evolved", payload={
+    "skill_id": "code-reviewer",
+    "old_q": 0.45,
+    "new_q": 0.72,
+})
+
+# Health check all adapters
+health = registry.health_check()
+for name, status in health.items():
+    print(f"  {name}: {'✅' if status else '❌'}")
+```
+
+---
+
+## Web Dashboard
+
+React 18 + Vite + Tailwind CSS 4 + shadcn/ui dashboard with 5 pages.
+
+### Setup
+
+```bash
+cd dashboard
+npm install
+npm run dev    # Dev server at http://localhost:5173
+npm run build  # Production build in dist/
+```
+
+### Pages
+
+| Page | Features |
+|------|----------|
+| **Dashboard** | KPI cards (Total Skills, Avg Q-Value, Success Rate, Outcomes), health pie chart, token usage trend, top 5 skills, recent evolution events |
+| **Skills** | Searchable skill list, expandable rows (tier1/2/3), health badges, Q-value progress bars, per-skill evolution |
+| **Evolution** | Timeline visualization, stat cards, global evolution trigger, event cards with success/failure |
+| **Graph** | SVG dependency visualization, Q-value color-coded nodes, hover highlighting, click-to-select |
+| **Settings** | API endpoint config, auto-evolution toggle, alert thresholds, import/export |
+
+### Connect to API
+
+```bash
+# Terminal 1: Start SkillForge API server
+python -m skillforge.api --port 8742
+
+# Terminal 2: Start dashboard dev server
+cd dashboard && npm run dev
+# Dashboard fetches from localhost:8742 (Vite proxy)
+```
+
+Dashboard automatically falls back to mock data when the API server is offline.
+
+---
+
 ## Benchmarking
 
 SkillForge ships with a benchmark runner for A/B comparison: vanilla agent vs. agent + SkillForge.
@@ -462,73 +1211,6 @@ print(f"Exported: {summary['exported']}")
 print(f"Errors:   {len(summary['errors'])}")
 ```
 
-### Import from Dict (Generic)
-
-```python
-# Import from any dict format (agentskills.io compatible)
-skill = forge.import_skill({
-    "name": "web-search",
-    "description": "Search the web for current information",
-    "instructions": "Use the search tool to find relevant results...",
-    "resources": ["examples/search_template.md"],
-    "tags": ["search", "web", "information-retrieval"],
-})
-```
-
----
-
-## Research Foundations
-
-SkillForge is grounded in peer-reviewed research on skill learning, maintenance, and evaluation:
-
-| Component | Research Paper | Key Contribution |
-|---|---|---|
-| **3-Tier Registry** | [*Memento-Skills*](https://arxiv.org/abs/2504.06299) (Yang et al., 2025) | Skill distillation from successful trajectories into tiered memory structures |
-| **Effectiveness Tracker** | [*MemQ*](https://arxiv.org/abs/2505.00000) (2025) | Q-value estimation for memory/skill quality using temporal-difference learning |
-| **Self-Diagnosis** | [*AEL*](https://arxiv.org/abs/2410.15460) (Liu et al., 2024) | Autonomous evolution loop: failure analysis → solution proposal → validation → deployment |
-| **Evolution Loop** | [*AEL*](https://arxiv.org/abs/2410.15460) + [*Evolve*](https://arxiv.org/abs/2412.01157) (Chen et al., 2024) | Co-evolving agents and skills through population-based search and failure-driven refinement |
-| **Progressive Loader** | [*SKILLREDUCER*](https://arxiv.org/abs/2503.09574) (Shi et al., 2025) | Reducing skill sets for efficient context use while preserving capability |
-| **Benchmark** | [*SEA-Eval*](https://arxiv.org/abs/2504.05700) (Zhang et al., 2025) | Holistic skill evaluation: timeliness, accuracy, adaptability across evolving tasks |
-
----
-
-## Roadmap
-
-### Phase 1 — MVP ✅ (Current)
-
-- [x] Skill Registry with 3-tier loading (SQLite backend)
-- [x] Effectiveness Tracker with Q-values via TD(λ)
-- [x] Skill Dependency Graph with topological sort and impact analysis
-- [x] Progressive Loader with multiple routing strategies
-- [x] Evolution Loop with health assessment and pruning
-- [x] Self-Diagnosis Engine (rule-based)
-- [x] Hermes Agent integration (bidirectional SKILL.md sync)
-- [x] Benchmark Runner with A/B comparison
-
-### Phase 2 — Intelligence
-
-- [ ] LLM-assisted failure diagnosis and auto-patching
-- [ ] Embedding-based skill search (semantic similarity)
-- [ ] Skill composition — combine skills for complex tasks
-- [ ] Transfer learning — share evolved skills across agent instances
-- [ ] Automated skill generation from successful trajectories
-
-### Phase 3 — Platform
-
-- [ ] REST API server for multi-agent skill sharing
-- [ ] Skill marketplace — publish and discover community skills
-- [ ] Web dashboard with skill analytics and evolution history
-- [ ] Agent skill observability (OpenTelemetry integration)
-- [ ] Multi-tenant skill registries with access control
-
-### Phase 4 — Advanced
-
-- [ ] Reinforcement learning from human feedback (RLHF) for Q-value refinement
-- [ ] Evolutionary algorithms for prompt optimization (population-based)
-- [ ] Cross-modal skills (text + vision + audio)
-- [ ] Formal verification of skill safety constraints
-- [ ] Federated skill learning across distributed agent fleets
-
 ---
 
 ## Project Structure
@@ -544,23 +1226,77 @@ skillforge/
 │   │   ├── loader.py             # ProgressiveLoader
 │   │   ├── graph.py              # SkillDependencyGraph
 │   │   ├── diagnosis.py          # SelfDiagnosisEngine
-│   │   └── evolution.py          # EvolutionLoop
+│   │   ├── evolution.py          # EvolutionLoop
+│   │   ├── db.py                 # Database abstraction (SQLite/Memory)
+│   │   ├── resilience.py         # CircuitBreaker, Retry, Bulkhead, ResilientExecutor
+│   │   └── cache.py              # TTLCache, LRUCache, @cached
+│   ├── intelligence/
+│   │   ├── conflict_detector.py  # Overlap/contradiction/cycle detection
+│   │   ├── health_monitor.py     # 4-weight health scoring
+│   │   ├── skill_creator.py      # Auto-create from trajectories
+│   │   ├── analyzer.py           # Clustering + recommendations
+│   │   ├── optimizer.py          # Compression, splitting, merging
+│   │   └── alert_manager.py      # Threshold/trend/anomaly alerts
+│   ├── advanced/
+│   │   ├── elastic_memory.py     # Adaptive memory store + consolidation
+│   │   ├── skill_generator.py    # Zero-shot skill generation
+│   │   ├── rl_optimizer.py       # Bandits + replay + curriculum
+│   │   ├── predictor.py          # OLS performance prediction
+│   │   ├── transfer.py           # Cross-agent skill export/import
+│   │   ├── multi_agent.py        # Shared skill pool + access control
+│   │   └── ab_testing.py         # A/B testing with statistical tests
+│   ├── marketplace/
+│   │   ├── registry.py           # Marketplace catalogue
+│   │   ├── publisher.py          # Skill validation + packaging
+│   │   └── installer.py          # Install + update tracking
+│   ├── observability/
+│   │   ├── tracer.py             # Distributed tracing (spans)
+│   │   ├── metrics.py            # Counters, gauges, timings
+│   │   └── logger.py             # Structured JSON logging
+│   ├── async_support/
+│   │   ├── async_registry.py     # Async SkillRegistry wrapper
+│   │   ├── async_tracker.py      # Async QValueTracker wrapper
+│   │   └── async_loader.py       # Async ProgressiveLoader wrapper
+│   ├── versioning/
+│   │   └── version_manager.py    # Semver + history + rollback + diff
 │   ├── integrations/
-│   │   └── hermes/
-│   │       └── adapter.py        # HermesSkillForgeAdapter
+│   │   ├── hermes/
+│   │   │   └── adapter.py        # HermesSkillForgeAdapter
+│   │   └── adapters.py           # GitHub/Slack/Webhook/File adapters
+│   ├── api/
+│   │   ├── server.py             # REST API server (stdlib http.server)
+│   │   ├── client.py             # Python API client
+│   │   └── cli.py                # CLI tool
+│   ├── mcp/
+│   │   └── server.py             # MCP server (stdin/stdout JSON-RPC)
 │   └── benchmark/
 │       ├── runner.py             # BenchmarkRunner
 │       ├── tasks.py              # Task + TaskSuite definitions
 │       ├── metrics.py            # MetricCollector
 │       └── report.py             # Report generation
-├── tests/
+├── dashboard/                    # React + Vite + Tailwind + shadcn/ui
+│   ├── src/
+│   │   ├── pages/                # Dashboard, Skills, Evolution, Graph, Settings
+│   │   ├── components/ui/        # shadcn components (Radix UI)
+│   │   ├── components/layout/    # Sidebar, Header, ThemeToggle
+│   │   └── lib/                  # API client, utils, mock data
+│   ├── package.json
+│   └── vite.config.ts
+├── tests/                        # 373 tests
 │   ├── test_registry.py
 │   ├── test_tracker.py
 │   ├── test_graph.py
-│   └── test_forge.py
+│   ├── test_forge.py
+│   ├── test_phase5a.py
+│   ├── test_phase6a.py
+│   └── test_phase8.py
+├── docs/
+│   ├── ARTICLE.md                # Medium article draft
+│   ├── INTEGRATION_GUIDE.md
+│   └── BENCHMARK_GUIDE.md
 ├── examples/
 │   └── hermes_integration/
-│       └── example.py            # Full integration walkthrough
+│       └── example.py
 └── README.md
 ```
 
@@ -569,7 +1305,7 @@ skillforge/
 ## Running Tests
 
 ```bash
-# Run all tests
+# Run all 373 tests
 pytest
 
 # With coverage
@@ -633,48 +1369,6 @@ SkillForge is built on a comprehensive survey of 2026's most important research 
 | [SEA-Eval](https://arxiv.org/abs/2605.04848) | SR + T convergence detects genuine vs pseudo-evolution | BenchmarkRunner evolution metrics |
 | [SWE-Bench](https://swe-bench.github.io/) | Standard for coding task evaluation | Benchmark task suite |
 | [GAIA Benchmark](https://huggingface.co/gaia-benchmark) | General AI assistant benchmark | Benchmark correctness metric |
-
-### Bibtex
-
-For academic citation, here are the key papers in BibTeX format:
-
-```bibtex
-@article{memento2026skills,
-  title={Memento-Skills: Self-Evolving Skill Library},
-  journal={arXiv preprint arXiv:2603.18743},
-  year={2026}
-}
-
-@article{lse2026,
-  title={Learning to Self-Evolve},
-  journal={OpenReview},
-  year={2026}
-}
-
-@article{ael2026,
-  title={Agent Evolving Learning: Less is More},
-  journal={arXiv preprint arXiv:2604.21725},
-  year={2026}
-}
-
-@article{searl2026,
-  title={SEARL: Self-Evolving Autonomous Agent with Tool Graph Memory},
-  journal={arXiv preprint arXiv:2604.07791},
-  year={2026}
-}
-
-@article{skillreducer2026,
-  title={SKILLREDUCER: Compress to Improve},
-  journal={arXiv preprint arXiv:2603.29919},
-  year={2026}
-}
-
-@article{memq2026,
-  title={MemQ: Provenance DAG for Agent Memory},
-  journal={arXiv preprint arXiv:2605.08374},
-  year={2026}
-}
-```
 
 ---
 
